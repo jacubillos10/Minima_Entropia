@@ -18,6 +18,9 @@ Compile:
 ### Currently in alpha version
 ### Actualmente en versión alfa
 Contact e-mail: ja.cubillos10@uniandes.edu.co
+
+Most python files are used to plot data. ME_Manual.py is the Minimum Entropy algorithm version in python, but way slower
+La mayoria de archivos de python son para graficar los datos. El archivo ME_Manual.py es la versión de python del algoritmo, pero mucho mas lento. 
   
  
 ### Referencias
