@@ -1,5 +1,4 @@
-# Minima Entropia
-# Minimum Entropy
+# Minima Entropia/Minimum Entropy
 Este repositorio tiene el código en C++ y en python del algoritmo de mínima entropía para hallar el periodo de estrellas variables, método introducido en el trabajo de Cincotta [1]
 
 This Repository has the C++ and python codes of minimum entropy method used to find variable stars periods. This method was introduced in Cincotta's work [1].
@@ -12,7 +11,15 @@ Usage/Modo de Uso: ./MinimaEntropia file.dat <periodo inicial/start period> <per
 
 Example/Ejemplo:
   ./MinimaEntropia OGLE-LMC-RRLYR-02889.dat 0.15 1.2 5 6 100000 4
+  
+Compile:
+  g++ -o MinimaEntropia MinimaEntropia.cpp
 
+### Currently in alpha version
+### Actualmente en versión alfa
+Contact e-mail: ja.cubillos10@uniandes.edu.co
+  
+ 
 ### Referencias
 [1] P. M. Cincotta, M. Mendez, and J. A. Nuñez, “Astronomical Time Series Analysis. I. A Search for
 Periodicity Using Information Entropy,” Astrophysical Journal., vol. 449, p. 231, Aug. 1995.
