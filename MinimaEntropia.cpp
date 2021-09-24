@@ -5,7 +5,9 @@
 #include <algorithm>
 #include <cstdlib>
 
-double hallar_entropia(double tp_prueba, int dim_grilla[2], int N_datos, double t_dat[], double u_dat[]);
+//Por favor compílelo así: g++ -o MinimaEntropia MinimaEntropia.cpp
+
+void hallar_entropia(double tp_prueba, int dim_grilla[2], int N_datos, int n_as, double t_dat[], double u_dat[], double* dir);
 int main(int argc, char *argv[])
 {
 	std::string nombre_archivo = argv[1];
@@ -14,7 +16,9 @@ int main(int argc, char *argv[])
 	int dimension1 = atoi(argv[4]);
 	int dimension2 = atoi(argv[5]);
 	int Finura = atoi(argv[6]);
+	int N_as = atoi(argv[7]);
 	int dimGrilla[2] = {dimension1,dimension2};
+	double *dirResp = new double[3];
 	std::ifstream read_file(nombre_archivo);
 	assert(read_file.is_open());
 	int N_filas=0;
@@ -46,7 +50,7 @@ int main(int argc, char *argv[])
 	//std::cout << "Los últimos elementos de t y u son: " << t[N_filas-1] <<" y "<< u[N_filas-1] << "\n";
 	read_file.close();
 	//double prueba2;
-	double f_menor, f_mayor, periodo, entropia, frecuencia;
+	double f_menor, f_mayor, periodo, entropia, frecuencia, g, f;
 	//prueba2=hallar_entropia(tp_prueba, dimGrilla, N_filas, t, u);
 	//std::cout << "La entropía para "<< tp_prueba<<" dias es " << prueba2 << " \n";
 	f_menor=1/tp_mayor;
@@ -61,20 +65,24 @@ int main(int argc, char *argv[])
 	{
 		frecuencia=f_menor+((f_mayor-f_menor)/Finura)*k; //Bueno confío en que esto va a dar dado que hay dos double por aquí
 		periodo=1/frecuencia;
-		entropia=hallar_entropia(periodo,dimGrilla,N_filas,t,u);
-		write_output << periodo << "," << entropia << " \n";
+		hallar_entropia(periodo,dimGrilla,N_filas,N_as,t,u, dirResp);
+		entropia=dirResp[0];
+		g=dirResp[1];
+		f=dirResp[2];
+		write_output << periodo << "," << entropia << "," << g << "," << f << " \n";
 		write_output.precision(10);
 		assert(write_output.good());
 	}
 	write_output.close();
 	std::cout << "Archivo "<< nombre_nuevo <<" generado" << "\n";
+	delete dirResp;
 	return 0;
 }
 
-double hallar_entropia(double tp_prueba, int dim_grilla[2], int N_datos, double t_dat[], double u_dat[])
+void hallar_entropia(double tp_prueba, int dim_grilla[2], int N_datos, int n_as, double t_dat[], double u_dat[], double* dir)
 {
-	double phi[N_datos];
-	double inf_u, sup_u, paso_phi, paso_u, entropia, entropia_norm;
+	double phi[N_datos], xi[dim_grilla[0]];
+	double inf_u, sup_u, paso_phi, paso_u, entropia, entropia_norm, xc, g, f, g_eval, f_eval, A, B, term_g, term_f;
 	double *min_u, *max_u;
 	int indice_i, indice_j;
 	int cuenta_grilla[dim_grilla[0]][dim_grilla[1]];
@@ -84,6 +92,7 @@ double hallar_entropia(double tp_prueba, int dim_grilla[2], int N_datos, double 
 	// i es el índice que representa la cantidad de cuadros que tendrá el eje phi
 	// j es el índice que represente la cantidad de cuadros que tendrá el eje u 
 	// es decir dim_grilla debe colocarse así: {cuadros_phi, cuadros_u}
+	A=dim_grilla[0];
 	min_u=std::min_element(u_dat,u_dat+N_datos); //Esto devuelve el pointer donde está el mínimo de u
 	max_u=std::max_element(u_dat,u_dat+N_datos); //Esto devuelve el pointer donde está el máximo de u
 	paso_phi=1.0/dim_grilla[0]; // Ojo al operar 2 int si no ponemos 1.0 sino solo 1, c++ redondea al int mas pequeño. 
@@ -112,18 +121,39 @@ double hallar_entropia(double tp_prueba, int dim_grilla[2], int N_datos, double 
 	
 	//Ahora que tenemos la grilla en números enteros, vamos a hallar la entropía correspondiente a esa grilla
 	entropia=0;
+	g_eval=0;
+	f_eval=0;
 	for (int i=0; i<dim_grilla[0]; i++)
 	{
+		xi[i]=0;
 		for (int j=0; j<dim_grilla[1]; j++)
 		{
 			if (cuenta_grilla[i][j]==0){}
 			else
 			{
-				entropia=entropia+(-((cuenta_grilla[i][j]+0.0)/N_datos)*log((cuenta_grilla[i][j]+0.0)/N_datos));
-				//pero mirá que volviste a caer. Recuerda que si vas a operar dos int, tienes que agregar un +0.0 para que la respuesta te salga con decimales.
+				xc=(cuenta_grilla[i][j]+0.0)/N_datos;
+				entropia=entropia+(-xc)*log(xc);
+				xi[i]=xi[i]+xc;
+				//Recuerda que si vas a operar dos int, tienes que agregar un +0.0 para que la respuesta te salga con decimales.
 			}
 		}
+		term_f=pow(A, 0.5*n_as*A*A*(std::abs(xi[i]-(1.0/A))));
+		if (i==0)
+		{
+			term_g=0.0;
+		}
+		else
+		{
+			term_g=pow(A, 0.5*n_as*A*A*(std::abs(xi[i]-xi[i-1])));
+		}
+		g_eval=g_eval+term_g;
+		f_eval=f_eval+term_f;
 	}
+	f=(1/(A+1))*(log(f_eval)/log(A));
+	g=(1/(A+(log(A-1)/log(A))))*(log(g_eval)/log(A));
+	//std::cout<<"El valor de g es: "<<g<<" \n";
 	entropia_norm=(1.0/log(dim_grilla[0]*dim_grilla[1]))*entropia;
-	return entropia_norm;
+	dir[0]=entropia_norm;
+	dir[1]=g;
+	dir[2]=f;
 }
